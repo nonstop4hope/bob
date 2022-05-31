@@ -1,3 +1,4 @@
+import json
 import math
 import os
 
@@ -8,28 +9,33 @@ class GoogleCSE:
     def __init__(self):
         self.api_key = os.getenv('GOOGLE_API_KEY')
         self.cse_id = os.getenv('GOOGLE_CSE_ID')
-        self.num_results = int(os.getenv('NUM_RESULTS'))
+        self.num_results = int(os.getenv('NUM_PAGES'))
 
-    def search(self, search_term, **kwargs):
+    class GoogleResult:
+        def __init__(self):
+            self.title = 'N/A'
+            self.description = 'N/A'
+            self.url = 'N/A'
+
+        def to_json(self):
+            return json.dumps(self, default=lambda o: o.__dict__,
+                              sort_keys=True, indent=3)
+
+    def search_on_page(self, search_term, page_number):
         service = build("customsearch", "v1", developerKey=self.api_key)
-        if self.num_results > 100:
-            raise NotImplementedError('Google Custom Search API supports max of 100 results')
-        elif self.num_results > 10:
-            kwargs['num'] = 10
-            calls_to_make = math.ceil(self.num_results / 10)
-        else:
-            calls_to_make = 1
-        kwargs['start'] = start_item = 1
-        items_to_return = []
+        results = service.cse().list(q=search_term, cx=self.cse_id, start=page_number).execute()
+        search_result = []
+        for result in results['items']:
+            element = self.GoogleResult()
+            element.title = result.get('title')
+            element.url = result.get('displayLink')
+            element.description = result.get('snippet')
+            search_result.append(element.to_json())
+        return search_result
 
-        while calls_to_make > 0:
-            res = service.cse().list(q=search_term, cx=self.cse_id, **kwargs).execute()
-            items_to_return.extend(res['items'])
-            calls_to_make -= 1
-            start_item += 10
-            kwargs['start'] = start_item
-            leftover = self.num_results - start_item + 1
-            if 0 < leftover < 10:
-                kwargs['num'] = leftover
-
-        return items_to_return
+    def search_on_multiply_pages(self, search_term):
+        search_results = []
+        for page in range(0, self.num_results):
+            search_result = self.search_on_page(search_term, page)
+            search_results.append(search_result)
+        return search_results
