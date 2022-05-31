@@ -1,7 +1,7 @@
 import json
 
 from django.http import HttpResponse
-from search.google import google_custom_search_engine
+from . import google_custom_search_engine
 
 
 def result(request):
