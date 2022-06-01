@@ -1,43 +1,47 @@
+window.addEventListener('DOMContentLoaded', event=>{
+
+    fetch('/api/v1/search/google', {
+        method: 'POST'
+    }).then(response=>response.json()).then(data=>{
+        if (!data.response.length) {
+            return
+        }
+
+        const datatablesSimple = document.getElementById('datatablesSimple');
+
+        if (datatablesSimple) {
+
+            let headings = Object.keys(data.response[0])
+            headings.unshift('select')
+            data = data.response.map(item=>Object.values(item))
+
+            data.forEach(item => {item.unshift('false')})
+
+            let dataTable = new simpleDatatables.DataTable(datatablesSimple,{
+                data: {
+                    headings: headings,
+                    data: data
+                },
+                paging: false,
+                columns: [{
+                    select: 0,
+                    render: renderYesNo
+                }]
+            });
 
 
-window.addEventListener('DOMContentLoaded', event => {
-
-
-let data = [
-    {
-        "prop1": "value1",
-        "prop2": "value2",
-        "prop3": "value3"
-    },
-    {
-        "prop1": "value4",
-        "prop2": "value5",
-        "prop3": "value6"
+        }
     }
-];
+    )
 
-let obj = {
-    headings: Object.keys(data[0]),
-    data: []
-};
-
-for ( let i = 0; i < data.length; i++ ) {
-
-    obj.data[i] = [];
-
-    for (let p in data[i]) {
-        if( data[i].hasOwnProperty(p) ) {
-            obj.data[i].push(data[i][p]);
+    function renderYesNo(data, cell, row) {
+        if (data == 'true') {
+            return row.classList.add("yes"),
+            `<b>Yes</b>`;
+        } else if (data == 'false') {
+            return row.classList.add("no"),
+            `<input type="checkbox">`;
         }
     }
 }
-
-
-    const datatablesSimple = document.getElementById('datatablesSimple');
-    if (datatablesSimple) {
-        let dataTable = new simpleDatatables.DataTable(datatablesSimple, {
-            data: obj,
-        });
-    }
-
-});
+);
