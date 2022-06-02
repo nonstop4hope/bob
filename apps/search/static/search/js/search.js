@@ -28,7 +28,7 @@ function sendRequests() {
   },
         body: JSON.stringify(data)
     }).then(response=>response.json()).then(data=>{
-        if (!data.response.length) {
+        if (!data.results.length) {
             return
         }
 
@@ -36,9 +36,9 @@ function sendRequests() {
 
         if (datatablesSimple) {
 
-            let headings = Object.keys(data.response[0])
+            let headings = Object.keys(data.results[0])
             headings.unshift('select')
-            data = data.response.map(item=>Object.values(item))
+            data = data.results.map(item=>Object.values(item))
 
             data.forEach(item => {item.unshift('false')})
 
