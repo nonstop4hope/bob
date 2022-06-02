@@ -1,7 +1,17 @@
 import json
+from dataclasses import dataclass, field, asdict
+from typing import List
 
-from django.http import HttpResponse
-from . import google_custom_search_engine
+from django.http import JsonResponse
+
+from apps.search.google.google_custom_search_engine import GoogleCSE
+
+
+@dataclass
+class Response:
+    error: bool = False
+    message: str = ''
+    results: List[GoogleCSE.GoogleResult] = field(default_factory=list)
 
 
 def result(request):
@@ -12,9 +22,12 @@ def result(request):
     search_term = body['search_term']
 
     # Get google search results
-    google_search = google_custom_search_engine.GoogleCSE()
+    google_search = GoogleCSE()
+    google_response = Response()
     try:
-        results = google_search.search_on_multiply_pages(search_term=search_term)
+        google_response.results = google_search.search_on_multiply_pages(search_term=search_term)
     except Exception as e:
-        return HttpResponse(e)
-    return HttpResponse(results, content_type='application/json')
+        google_response.error = True
+        google_response.message = e
+        return JsonResponse(asdict(google_response), safe=False)
+    return JsonResponse(asdict(google_response), safe=False)
