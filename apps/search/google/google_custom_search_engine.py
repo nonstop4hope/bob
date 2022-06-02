@@ -35,5 +35,5 @@ class GoogleCSE:
         search_results = []
         for page in range(0, self.num_results):
             search_result = self.search_on_page(search_term, page)
-            search_results.append(search_result)
+            search_results += search_result
         return search_results
